@@ -1,39 +1,49 @@
-import React, { useState } from "react"; // Import React and the useState hook for managing state
+import React, { useState } from "react";
 
 function App() {
-  // Declare a state variable 'myArray' initialized with an initial list of fruits and a way to update it
-  const [myArray, setMyArray] = useState(['apple', 'banana', 'orange']);
+  const [todos, setTodos] = useState([
+    { text: 'apple', checked: false },
+    { text: 'banana', checked: false },
+    { text: 'orange', checked: false },
+  ]);
 
-
-  // Declare a state variable to store the current input value from the user
   const [inputValue, setInputValue] = useState("");
 
-  // Create a list of <p> elements by mapping over the array, each item gets a unique 'key' prop
-  const myList = myArray.map((item, index) => <p key={index}>{item}</p>);
+  const toggleCheck = (index) => {
+    const newTodos = [...todos];
+    newTodos[index].checked = !newTodos[index].checked;
+    setTodos(newTodos);
+  };
 
-  // Function to update 'inputValue' state whenever the user types in the input field
-  const handleInputChange = (e) => setInputValue(e.target.value);
-
-  // Function to add the input value to the array when the button is clicked
   const submit = () => {
-    // Only add if inputValue is not empty or just whitespace
-    if (inputValue.trim() !== "") {
-      // Create a new array with the existing items plus the new input value
-      setMyArray([...myArray, inputValue.trim()]);
-      // Clear the input field after adding the new item
+    const trimmedValue = inputValue.trim();
+    if (trimmedValue !== "") {
+      setTodos([...todos, { text: trimmedValue, checked: false }]);
       setInputValue("");
     }
   };
 
-  
+  const handleInputChange = (e) => setInputValue(e.target.value);
+
   return (
     <div>
-      {myList}
-      <input
-        type="text"
-        placeholder="enter list here"
-        value={inputValue}
-        onChange={handleInputChange}
+      {todos.map(({ text, checked }, index) => (
+        <div key={index}>
+          <input 
+            type="checkbox" 
+            checked={checked} 
+            onChange={() => toggleCheck(index)} 
+          />
+          <span style={{ textDecoration: checked ? "line-through" : "none" }}>
+            {text}
+          </span>
+        </div>
+      ))}
+      <input 
+        type="text" 
+        placeholder="Enter todo" 
+        value={inputValue} 
+        onChange={handleInputChange} 
       />
       <button onClick={submit}>Add to list</button>
     </div>
