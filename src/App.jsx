@@ -59,6 +59,16 @@ function App() {
 
   return (
     <div style={{ maxWidth: "400px", margin: "auto", fontFamily: "Arial, sans-serif" }}>
+      <div style={{ display: "flex", marginBottom: "16px" }}>
+        <input
+          type="text"
+          placeholder="Enter todo"
+          value={inputValue}
+          onChange={handleInputChange}
+          style={{ flexGrow: 1, marginRight: "8px" }}
+        />
+        <button onClick={submit}>Add</button>
+      </div>
       {todos.map(({ text, checked }, index) => (
         <div
           key={index}
@@ -105,19 +115,8 @@ function App() {
           )}
         </div>
       ))}
-      <div style={{ marginTop: "16px", display: "flex" }}>
-        <input
-          type="text"
-          placeholder="Enter todo"
-          value={inputValue}
-          onChange={handleInputChange}
-          style={{ flexGrow: 1, marginRight: "8px" }}
-        />
-        <button onClick={submit}>Add</button>
-      </div>
     </div>
   );
 }
 
-// export
-export default App; 
+export default App;
