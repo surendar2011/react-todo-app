@@ -1,120 +1,191 @@
 import React, { useState } from "react";
+import todoStyles from './Todo.module.css';
+import appStyles from './App.module.css';
 
+// Todo component
+function Todo(props) {
+  const [isEditing, setEditing] = useState(false);
+  const [newName, setNewName] = useState("");
+
+  function handleChange(e) {
+    setNewName(e.target.value);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    props.editTask(props.id, newName);
+    setNewName("");
+    setEditing(false);
+  }
+
+  const editingTemplate = (
+    <form className={todoStyles.stackSmall} onSubmit={handleSubmit}>
+      <div className={todoStyles.formGroup}>
+        <label className={todoStyles.todoLabel} htmlFor={props.id}>
+          New name for {props.name}
+        </label>
+        <input
+          id={props.id}
+          className={todoStyles.todoText}
+          type="text"
+          value={newName}
+          onChange={handleChange}
+        />
+      </div>
+      <div className={todoStyles.btnGroup}>
+        <button
+          type="button"
+          className={todoStyles.todoCancel}
+          onClick={() => setEditing(false)}
+        >
+          Cancel
+          <span className={todoStyles.visuallyHidden}>renaming {props.name}</span>
+        </button>
+        <button type="submit" className={`${todoStyles.btn} ${todoStyles.btnPrimary}`}>
+          Save
+          <span className={todoStyles.visuallyHidden}>new name for {props.name}</span>
+        </button>
+      </div>
+    </form>
+  );
+
+  const viewTemplate = (
+    <div className={todoStyles.stackSmall}>
+      <div className={todoStyles.cCb}>
+        <input
+          id={props.id}
+          type="checkbox"
+          checked={props.completed}
+          onChange={() => props.toggleTaskCompleted(props.id)}
+        />
+        <label className={todoStyles.todoLabel} htmlFor={props.id}>
+          {props.name}
+        </label>
+      </div>
+      <div className={todoStyles.btnGroup}>
+        <button
+          type="button"
+          className={todoStyles.btn}
+          onClick={() => setEditing(true)}
+        >
+          Edit <span className={todoStyles.visuallyHidden}>{props.name}</span>
+        </button>
+        <button
+          type="button"
+          className={`${todoStyles.btn} ${todoStyles.btnDanger}`}
+          onClick={() => props.deleteTask(props.id)}
+        >
+          Delete <span className={todoStyles.visuallyHidden}>{props.name}</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  const todoClassName = props.completed 
+    ? `${todoStyles.todo} ${todoStyles.todoCompleted}`
+    : todoStyles.todo;
+
+  return <li className={todoClassName}>{isEditing ? editingTemplate : viewTemplate}</li>;
+}
+
+// App component
 function App() {
-  const [todos, setTodos] = useState([
-    { text: "apple", checked: false },
-    { text: "banana", checked: false },
-    { text: "orange", checked: false },
+  const [tasks, setTasks] = useState([
+    { id: "task-1", name: "Buy groceries", completed: false },
+    { id: "task-2", name: "Walk the dog", completed: true },
+    { id: "task-3", name: "Do laundry", completed: false },
   ]);
 
-  const [inputValue, setInputValue] = useState("");
-  const [editIndex, setEditIndex] = useState(null);
-  const [editText, setEditText] = useState("");
+  // Toggle task completed
+  function toggleTaskCompleted(id) {
+    const updatedTasks = tasks.map(task => {
+      if (id === task.id) {
+        return { ...task, completed: !task.completed };
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
+  }
 
-  const toggleCheck = (index) => {
-    const newTodos = [...todos];
-    newTodos[index].checked = !newTodos[index].checked;
-    setTodos(newTodos);
-  };
+  // Delete task
+  function deleteTask(id) {
+    const remainingTasks = tasks.filter(task => task.id !== id);
+    setTasks(remainingTasks);
+  }
 
-  const submit = () => {
-    const trimmedValue = inputValue.trim();
-    if (trimmedValue !== "") {
-      setTodos([...todos, { text: trimmedValue, checked: false }]);
-      setInputValue("");
+  // Edit task
+  function editTask(id, newName) {
+    const editedTaskList = tasks.map(task => {
+      if (id === task.id) {
+        return { ...task, name: newName };
+      }
+      return task;
+    });
+    setTasks(editedTaskList);
+  }
+
+  // Add new task
+  function addTask(name) {
+    const newTask = {
+      id: `task-${tasks.length + 1}`,
+      name,
+      completed: false,
+    };
+    setTasks([...tasks, newTask]);
+  }
+
+  const taskList = tasks.map(task => (
+    <Todo
+      key={task.id}
+      id={task.id}
+      name={task.name}
+      completed={task.completed}
+      toggleTaskCompleted={toggleTaskCompleted}
+      deleteTask={deleteTask}
+      editTask={editTask}
+    />
+  ));
+
+  const [newTaskName, setNewTaskName] = useState("");
+  function handleNewTaskChange(e) {
+    setNewTaskName(e.target.value);
+  }
+  function handleNewTaskSubmit(e) {
+    e.preventDefault();
+    if (newTaskName.trim() !== "") {
+      addTask(newTaskName.trim());
+      setNewTaskName("");
     }
-  };
-
-  const handleInputChange = (e) => setInputValue(e.target.value);
-
-  const startEditing = (index) => {
-    setEditIndex(index);
-    setEditText(todos[index].text);
-  };
-
-  const handleEditChange = (e) => setEditText(e.target.value);
-
-  const saveEdit = (index) => {
-    const newTodos = [...todos];
-    newTodos[index].text = editText.trim() || newTodos[index].text;
-    setTodos(newTodos);
-    setEditIndex(null);
-    setEditText("");
-  };
-
-  const handleEditKeyDown = (e, index) => {
-    if (e.key === "Enter") {
-      saveEdit(index);
-    }
-  };
-
-  const deleteTodo = (index) => {
-    const newTodos = todos.filter((_, i) => i !== index);
-    setTodos(newTodos);
-    if (editIndex === index) {
-      setEditIndex(null);
-      setEditText("");
-    }
-  };
+  }
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", fontFamily: "Arial, sans-serif" }}>
-      <div style={{ display: "flex", marginBottom: "16px" }}>
-        <input
-          type="text"
-          placeholder="Enter todo"
-          value={inputValue}
-          onChange={handleInputChange}
-          style={{ flexGrow: 1, marginRight: "8px" }}
-        />
-        <button onClick={submit}>Add</button>
-      </div>
-      {todos.map(({ text, checked }, index) => (
-        <div
-          key={index}
-          style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
-        >
+    <div className={appStyles.todoapp}>
+      <div className={appStyles.stackLarge}>
+        <h1>Todo List</h1>
+        <form onSubmit={handleNewTaskSubmit}>
           <input
-            type="checkbox"
-            checked={checked}
-            onChange={() => toggleCheck(index)}
-            style={{ marginRight: "8px" }}
+            type="text"
+            id="new-todo-input"
+            className={appStyles.input}
+            name="text"
+            autoComplete="off"
+            value={newTaskName}
+            onChange={handleNewTaskChange}
+            placeholder="What needs to be done?"
           />
-          {editIndex === index ? (
-            <>
-              <input
-                type="text"
-                value={editText}
-                onChange={handleEditChange}
-                onKeyDown={(e) => handleEditKeyDown(e, index)}
-                autoFocus
-                style={{ flexGrow: 1, marginRight: "8px" }}
-              />
-              <button onClick={() => saveEdit(index)} style={{ marginRight: "8px" }}>
-                Save
-              </button>
-              <button onClick={() => setEditIndex(null)}>Cancel</button>
-            </>
-          ) : (
-            <>
-              <span
-                style={{
-                  textDecoration: checked ? "line-through" : "none",
-                  flexGrow: 1,
-                }}
-              >
-                {text}
-              </span>
-              <button onClick={() => startEditing(index)} style={{ marginRight: "8px" }}>
-                Edit
-              </button>
-              <button onClick={() => deleteTodo(index)} style={{ color: "red" }}>
-                Delete
-              </button>
-            </>
-          )}
-        </div>
-      ))}
+          <button type="submit" className={`${appStyles.btn} ${appStyles.btnPrimary} ${appStyles.btnLg}`}>
+            Add Task
+          </button>
+        </form>
+        <h2 id="list-heading">Tasks</h2>
+        <ul
+          role="list"
+          className={`${appStyles.todoList} ${appStyles.stackException}`}
+          aria-labelledby="list-heading"
+        >
+          {taskList}
+        </ul>
+      </div>
     </div>
   );
 }
